@@ -1,0 +1,17 @@
+FROM eclipse-temurin:17-alpine
+
+WORKDIR /workspace/app
+
+# Instala dependências do sistema para desenvolvimento
+RUN apk add --no-cache bash
+
+# Copia apenas arquivos de configuração Maven para cache de dependências
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+
+# Baixa dependências Maven (serão cacheadas se pom.xml não mudar)
+RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
+
+# Comando será sobrescrito no docker-compose
+CMD ["./mvnw", "spring-boot:run"]
