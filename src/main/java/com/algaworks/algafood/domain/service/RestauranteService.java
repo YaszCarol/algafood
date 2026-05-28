@@ -1,16 +1,15 @@
 package com.algaworks.algafood.domain.service;
 
-import java.util.List;
-
+import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
+import com.algaworks.algafood.domain.exception.RestauranteNaoEncontradaException;
+import com.algaworks.algafood.domain.model.Cozinha;
+import com.algaworks.algafood.domain.model.Restaurante;
+import com.algaworks.algafood.domain.repository.RestauranteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
-import com.algaworks.algafood.domain.exception.EntidadeNaoEncontradaException;
-import com.algaworks.algafood.domain.model.Cozinha;
-import com.algaworks.algafood.domain.model.Restaurante;
-import com.algaworks.algafood.domain.repository.RestauranteRepository;
+import java.util.List;
 
 @Service
 public class RestauranteService {
@@ -22,7 +21,6 @@ public class RestauranteService {
 	private CadastroCozinhaService cozinhaService;
 
 	private static final String MSG_RESTAURANTE_EM_USO = "Restaurante de código %d não pode ser removido, pois está em uso";
-	private static final String MSG_RESTAURANTE_NAO_ENCONTRADA = "Restaurante de codigo %d nao encontrado";
 
 	public List<Restaurante> listar() {
 		return restauranteRepository.findAll();
@@ -40,16 +38,14 @@ public class RestauranteService {
 	}
 
 	public Restaurante buscar(Long id) {
-		return restauranteRepository.findById(id).orElseThrow(() -> new EntidadeNaoEncontradaException(
-				String.format(MSG_RESTAURANTE_NAO_ENCONTRADA, id)));
+		return restauranteRepository.findById(id).orElseThrow(() -> new RestauranteNaoEncontradaException(id));
 	}
 
 	public void remover(Long restauranteId) {
 
 		try {
 			if (!restauranteRepository.existsById(restauranteId)) {
-				throw new EntidadeNaoEncontradaException(
-						String.format(MSG_RESTAURANTE_NAO_ENCONTRADA, restauranteId));
+				throw new RestauranteNaoEncontradaException(restauranteId);
 			}
 
 			restauranteRepository.deleteById(restauranteId);
