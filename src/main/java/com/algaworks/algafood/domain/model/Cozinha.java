@@ -1,13 +1,15 @@
 package com.algaworks.algafood.domain.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.algaworks.algafood.core.validation.Groups;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -15,12 +17,18 @@ import lombok.EqualsAndHashCode;
 @Table(name = "cozinha")
 public class Cozinha {
 
+	@NotNull(groups = Groups.CozinhaId.class)
 	@Id
 	@EqualsAndHashCode.Include
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
+	@NotBlank
 	@Column(name = "nome", length = 30, nullable = false)
 	private String nome;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "cozinha")
+	private List<Restaurante> restaurantes = new ArrayList<>();
 
 }
