@@ -13,6 +13,8 @@ public enum ProblemType {
 
     PARAMETRO_INVALIDO("/parametro-url-invalido", "Parâmetro de URL inválido"),
 
+    DADOS_INVALIDOS("/dados-invalidos", "Dados inválidos"),
+
     ERRO_DE_SISTEMA("/erro-de-sistema", "Erro de sistema"),
 
     ENTIDADE_EM_USO("/entidade-em-uso", "Entidade em uso");

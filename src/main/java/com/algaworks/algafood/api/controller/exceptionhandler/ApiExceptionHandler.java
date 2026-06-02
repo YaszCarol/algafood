@@ -1,15 +1,22 @@
 package com.algaworks.algafood.api.controller.exceptionhandler;
 
+import com.algaworks.algafood.core.validation.ValidacaoException;
 import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
 import com.algaworks.algafood.domain.exception.EntidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.NegocioException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -21,10 +28,14 @@ import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.databind.exc.PropertyBindingException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @Autowired
+    private MessageSource messageSource;
 
     @Override
     protected @Nullable ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
@@ -70,7 +81,6 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(exception, body, headers, statusCode, request);
     }
 
-
     @Override
     protected @Nullable ResponseEntity<Object> handleNoResourceFoundException(NoResourceFoundException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemType problemType = ProblemType.RECURSO_NAO_ENCONTRADO;
@@ -80,6 +90,24 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         Problem problem = createProblemBuilder(HttpStatus.valueOf(status.value()), problemType, detail).build();
 
         return handleExceptionInternal(exception, problem, headers, status, request);
+    }
+
+    @Override
+    protected @Nullable ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+
+        BindingResult bindingResult = exception.getBindingResult();
+
+        return handleValidacaoFields(exception, headers, status, request, bindingResult);
+    }
+
+    @ExceptionHandler(ValidacaoException.class)
+    public ResponseEntity<?> handleValidacaoException(ValidacaoException exception, WebRequest request) {
+
+        BindingResult bindingResult = exception.getBindingResult();
+        HttpStatusCode status = HttpStatus.BAD_REQUEST;
+
+        return handleValidacaoFields(exception, new HttpHeaders(), status, request, bindingResult);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -147,7 +175,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
     }
 
-    private Problem.ProblemBuilder createProblemBuilder(HttpStatus status,
+    private Problem.ProblemBuilder createProblemBuilder(HttpStatusCode status,
                                                         ProblemType problemType, String detail) {
 
         return Problem.builder()
@@ -193,4 +221,34 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         return handleExceptionInternal(exception, problem, headers, status, request);
     }
+
+    public ResponseEntity<Object> handleValidacaoFields(Exception exception, HttpHeaders headers,
+                                                        HttpStatusCode status, WebRequest request, BindingResult bindingResult) {
+
+        ProblemType problemType = ProblemType.DADOS_INVALIDOS;
+        String detail = "Um ou mais campos estão inválidos. Faça o preechimento correto e tente novamente.";
+
+        List<Problem.Object> problemObjects = bindingResult.getAllErrors().stream()
+                .map(objectError -> {
+                    String message = messageSource.getMessage(objectError, LocaleContextHolder.getLocale());
+
+                    String name = objectError.getObjectName();
+
+                    if (objectError instanceof FieldError) {
+                        name = ((FieldError) objectError).getField();
+                    }
+
+                    return Problem.Object.builder()
+                            .name(name)
+                            .userMessage(message)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        Problem problem = createProblemBuilder(status, problemType, detail)
+                .objects(problemObjects).build();
+
+        return handleExceptionInternal(exception, problem, headers, status, request);
+    }
+
 }
