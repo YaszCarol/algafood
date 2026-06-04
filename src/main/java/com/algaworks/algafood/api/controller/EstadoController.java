@@ -2,6 +2,10 @@ package com.algaworks.algafood.api.controller;
 
 import java.util.List;
 
+import com.algaworks.algafood.api.assembler.EstadoAssembler;
+import com.algaworks.algafood.api.disassembler.EstadoDisassembler;
+import com.algaworks.algafood.api.model.input.EstadoInput;
+import com.algaworks.algafood.api.model.input.EstadoModel;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,29 +32,50 @@ public class EstadoController {
 	@Autowired
 	private EstadoService estadoService;
 
+	@Autowired
+	private EstadoAssembler estadoAssembler;
+
+	@Autowired
+	private EstadoDisassembler estadoDisassembler;
+
 	@GetMapping
-	public List<Estado> listar() {
-		return estadoService.listar();
+	public List<EstadoModel> listar() {
+
+		List<Estado> estados = estadoService.listar();
+
+		return estadoAssembler.toCollectModel(estados);
 	}
 
 	@GetMapping("/{estadoId}")
-	public Estado buscar(@PathVariable Long estadoId) {
-		return estadoService.buscar(estadoId);
+	public EstadoModel buscar(@PathVariable Long estadoId) {
+		Estado estado = estadoService.buscar(estadoId);
+
+		return estadoAssembler.toModel(estado);
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public Estado adicionar(@RequestBody @Valid Estado estado) {
-		return estadoService.salvar(estado);
+	public EstadoModel adicionar(@RequestBody @Valid EstadoInput estadoInput) {
+
+		Estado estado = estadoDisassembler.toDomainObject(estadoInput);
+
+		Estado estadoSalvo = estadoService.salvar(estado);
+
+		return estadoAssembler.toModel(estadoSalvo);
 	}
 
 	@PutMapping("/{estadoId}")
-	public Estado atualizar(@PathVariable Long estadoId, @RequestBody  @Valid Estado estado) {
+	public EstadoModel atualizar(@PathVariable Long estadoId, @RequestBody  @Valid EstadoInput estadoInput) {
+
 		Estado estadoAtual = estadoService.buscar(estadoId);
 
-		BeanUtils.copyProperties(estado, estadoAtual, "id");
+		System.out.println(estadoAtual.toString());
 
-		return estadoService.salvar(estadoAtual);
+		estadoDisassembler.copyToObject(estadoInput, estadoAtual);
+
+		Estado estado = estadoService.salvar(estadoAtual);
+
+		return estadoAssembler.toModel(estado);
 	}
 
 	@DeleteMapping("/{estadoId}")

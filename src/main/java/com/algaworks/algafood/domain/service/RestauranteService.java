@@ -8,6 +8,7 @@ import com.algaworks.algafood.domain.repository.RestauranteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class RestauranteService {
 		return restauranteRepository.findAll();
 	}
 
+	@Transactional
 	public Restaurante salvar(Restaurante restaurante) {
 
 		Long cozinhaId = restaurante.getCozinha().getId();
@@ -41,6 +43,7 @@ public class RestauranteService {
 		return restauranteRepository.findById(id).orElseThrow(() -> new RestauranteNaoEncontradaException(id));
 	}
 
+	@Transactional
 	public void remover(Long restauranteId) {
 
 		try {
@@ -49,6 +52,12 @@ public class RestauranteService {
 			}
 
 			restauranteRepository.deleteById(restauranteId);
+
+			// necessario pois o metodo está usando @Transactional que realiza de fato a operação (commit)
+			// no fim do metodo e entao exceçoes sao lançadas pós catch.
+			// estamos forçando a realizaçao da operação para que caso haja exceçoes de
+			// DataIntegrityViolationException seja possível a sua captura
+			restauranteRepository.flush();
 		} catch (DataIntegrityViolationException e) {
 			throw new EntidadeEmUsoException(
 					String.format(MSG_RESTAURANTE_EM_USO, restauranteId));
