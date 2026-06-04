@@ -7,6 +7,7 @@ import com.algaworks.algafood.domain.repository.EstadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,16 +28,24 @@ public class EstadoService {
                 .orElseThrow(() -> new EstadoNaoEncontradoException(estadoId));
     }
 
+    @Transactional
     public Estado salvar(Estado estado) {
         return estadoRepository.save(estado);
     }
 
+    @Transactional
     public void remover(Long estadoId) {
         try {
             if (!estadoRepository.existsById(estadoId)) {
                 throw new EstadoNaoEncontradoException(estadoId);
             }
             estadoRepository.deleteById(estadoId);
+
+            // necessario pois o metodo está usando @Transactional que realiza de fato a operação (commit)
+            // no fim do metodo e entao exceçoes sao lançadas pós catch.
+            // estamos forçando a realizaçao da operação para que caso haja exceçoes de
+            // DataIntegrityViolationException seja possível a sua captura
+            estadoRepository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new EntidadeEmUsoException(
                     String.format(MSG_ESTADO_EM_USO, estadoId));

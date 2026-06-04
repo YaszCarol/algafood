@@ -7,6 +7,7 @@ import com.algaworks.algafood.domain.repository.CozinhaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class CadastroCozinhaService {
         return cozinhaRepository.findAll();
     }
 
+    @Transactional
     public Cozinha salvar(Cozinha cozinha) {
         return cozinhaRepository.save(cozinha);
     }
@@ -30,6 +32,7 @@ public class CadastroCozinhaService {
         return cozinhaRepository.findById(cozinhaId).orElseThrow(() -> new CozinhaNaoEncontradaException(cozinhaId));
     }
 
+    @Transactional
     public void remover(Long cozinhaId) {
         try {
             if (!cozinhaRepository.existsById(cozinhaId)) {
@@ -37,6 +40,11 @@ public class CadastroCozinhaService {
             }
 
             cozinhaRepository.deleteById(cozinhaId);
+            // necessario pois o metodo está usando @Transactional que realiza de fato a operação (commit)
+            // no fim do metodo e entao exceçoes sao lançadas pós catch.
+            // estamos forçando a realizaçao da operação para que caso haja exceçoes de
+            // DataIntegrityViolationException seja possível a sua captura
+            cozinhaRepository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new EntidadeEmUsoException(String.format(MSG_COZINHA_EM_USO, cozinhaId));
         }

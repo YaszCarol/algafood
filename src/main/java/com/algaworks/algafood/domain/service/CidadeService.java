@@ -8,6 +8,7 @@ import com.algaworks.algafood.domain.repository.CidadeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class CidadeService {
         return cidadeRepository.findById(cidadeId).orElseThrow(() -> new CidadeNaoEncontradaException(cidadeId));
     }
 
+    @Transactional
     public Cidade salvar(Cidade cidade) {
 
         Long estadoId = cidade.getEstado().getId();
@@ -41,6 +43,7 @@ public class CidadeService {
         return cidadeRepository.save(cidade);
     }
 
+    @Transactional
     public void remover(Long cidadeId) {
         if (!cidadeRepository.existsById(cidadeId)) {
             throw new CidadeNaoEncontradaException(cidadeId);
@@ -48,6 +51,11 @@ public class CidadeService {
 
         try {
             cidadeRepository.deleteById(cidadeId);
+            // necessario pois o metodo está usando @Transactional que realiza de fato a operação (commit)
+            // no fim do metodo e entao exceçoes sao lançadas pós catch.
+            // estamos forçando a realizaçao da operação para que caso haja exceçoes de
+            // DataIntegrityViolationException seja possível a sua captura
+            cidadeRepository.flush();
         } catch (
                 DataIntegrityViolationException e) {
             throw new EntidadeEmUsoException(
