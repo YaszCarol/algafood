@@ -31,4 +31,12 @@ public class Grupo {
     // define como sera a tabela intermediaria
     @JoinTable(name = "grupo_permissao", joinColumns = @JoinColumn(name = "grupo_id"), inverseJoinColumns = @JoinColumn(name = "permissao_id"))
     private List<Permissao> permissoes = new ArrayList<>();
+
+    public void desassociarPermissao(Permissao permissao) {
+        this.getPermissoes().remove(permissao);
+    }
+
+    public void associarPermissao(Permissao permissao) {
+        this.getPermissoes().add(permissao);
+    }
 }

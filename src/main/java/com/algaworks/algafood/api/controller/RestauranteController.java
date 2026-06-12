@@ -5,12 +5,16 @@ import com.algaworks.algafood.api.disassembler.RestaurateInputDisassembler;
 import com.algaworks.algafood.api.model.CozinhaModel;
 import com.algaworks.algafood.api.model.RestauranteModel;
 import com.algaworks.algafood.api.model.input.RestauranteInput;
+import com.algaworks.algafood.api.model.input.view.RestauranteView;
 import com.algaworks.algafood.core.validation.ValidacaoException;
+import com.algaworks.algafood.domain.exception.CidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.CozinhaNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.NegocioException;
+import com.algaworks.algafood.domain.exception.RestauranteNaoEncontradaException;
 import com.algaworks.algafood.domain.model.Cozinha;
 import com.algaworks.algafood.domain.model.Restaurante;
 import com.algaworks.algafood.domain.service.RestauranteService;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -45,8 +49,25 @@ public class RestauranteController {
     @Autowired
     private RestaurateInputDisassembler restauranteDisassembler;
 
-    @GetMapping
+//    @JsonView(RestauranteView.Resumo.class)
+//    @GetMapping
+//    public List<RestauranteModel> listar() {
+//        List<Restaurante> restaurantes = restauranteService.listar();
+//
+//        return restauranteAssembler.toCollectionModel(restaurantes);
+//    }
+
+    @JsonView(RestauranteView.Resumo.class)
+    @GetMapping(params = "projecao=resumo")
     public List<RestauranteModel> listar() {
+        List<Restaurante> restaurantes = restauranteService.listar();
+
+        return restauranteAssembler.toCollectionModel(restaurantes);
+    }
+
+    @JsonView(RestauranteView.ResumoNome.class)
+    @GetMapping(params = "projecao=apenas-nome")
+    public List<RestauranteModel> listarResumido() {
         List<Restaurante> restaurantes = restauranteService.listar();
 
         return restauranteAssembler.toCollectionModel(restaurantes);
@@ -70,7 +91,7 @@ public class RestauranteController {
 
             return restauranteAssembler.toModel(restauranteAdd);
 
-        } catch (CozinhaNaoEncontradaException exception) {
+        } catch (CozinhaNaoEncontradaException | CidadeNaoEncontradaException exception) {
             throw new NegocioException(exception.getMessage());
         }
     }
@@ -81,10 +102,11 @@ public class RestauranteController {
         Restaurante restauranteAtual = restauranteService.buscar(restauranteId);
 
         restauranteDisassembler.copyToObject(restauranteInput, restauranteAtual);
-        try {
 
+        try {
+            restauranteService.salvar(restauranteAtual);
             return restauranteAssembler.toModel(restauranteAtual);
-        } catch (CozinhaNaoEncontradaException exception) {
+        } catch (CozinhaNaoEncontradaException | CidadeNaoEncontradaException exception) {
             throw new NegocioException(exception.getMessage());
         }
     }
@@ -96,6 +118,52 @@ public class RestauranteController {
     }
 
 
+    @PutMapping("/{restauranteId}/ativo")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ativar(@PathVariable Long restauranteId){
 
+        restauranteService.ativar(restauranteId);
+    }
 
+    @DeleteMapping("/{restauranteId}/ativo")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void inativar(@PathVariable Long restauranteId){
+
+        restauranteService.inativar(restauranteId);
+    }
+
+    @PutMapping("/{restauranteId}/fechamento")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void fechar(@PathVariable Long restauranteId){
+
+        restauranteService.fechar(restauranteId);
+    }
+
+    @PutMapping("/{restauranteId}/aberto")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void abrir(@PathVariable Long restauranteId){
+
+        restauranteService.abrir(restauranteId);
+    }
+
+    @PutMapping("/ativacoes")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ativarMultiplos(@RequestBody List<Long> restauranteIds) {
+        try {
+            restauranteService.ativar(restauranteIds);
+        } catch (RestauranteNaoEncontradaException e) {
+            throw new NegocioException(e.getMessage(), e);
+        }
+    }
+
+    @DeleteMapping("/ativacoes")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void inativarMultiplos(@RequestBody List<Long> restauranteIds) {
+        try {
+            restauranteService.inativar(restauranteIds);
+        } catch (RestauranteNaoEncontradaException e) {
+            throw new NegocioException(e.getMessage(), e);
+        }
+    }
 }
+

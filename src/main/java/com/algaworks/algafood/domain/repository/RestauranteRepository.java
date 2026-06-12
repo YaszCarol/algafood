@@ -19,6 +19,8 @@ public interface RestauranteRepository
     @Query("from Restaurante r join fetch r.cozinha left join fetch r.formasPagamento")
     List<Restaurante> findAll();
 
+    public boolean existsByIdAndFormasPagamentoId(Long restauranteid, Long formapagamentoId);
+
     List<Restaurante> queryByTaxaFreteBetween(BigDecimal taxaInicial, BigDecimal taxaFinal);
 
     // @Query("from Restaurante where nome like %:nome% and cozinha.id = :id")
