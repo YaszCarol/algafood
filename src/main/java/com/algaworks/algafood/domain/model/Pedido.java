@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import com.algaworks.algafood.domain.exception.NegocioException;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -24,6 +26,8 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
+
+    private String codigo;
 
     private BigDecimal subtotal;
     private BigDecimal taxaFrete;
@@ -51,10 +55,51 @@ public class Pedido {
     @JoinColumn(nullable = false)
     private FormaPagamento formaPagamento;
 
-    @OneToMany(mappedBy = "pedido")
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL) // salvar o pedido e os itens
     private List<ItemPedido> itens = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "usuario_cliente_id", nullable = false)
     private Usuario cliente;
+
+    public void calcularValorTotal() {
+        this.subtotal = getItens().stream()
+                .map(ItemPedido::getPrecoTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        this.valorTotal = getSubtotal().add(getTaxaFrete());
+    }
+
+    public void confirmar() {
+        this.setStatus(StatusPedido.CONFIRMADO);
+        this.setDataConfirmacao(OffsetDateTime.now());
+    }
+
+    public void cancelar() {
+        this.setStatus(StatusPedido.CANCELADO);
+        this.setDataCancelamento(OffsetDateTime.now());
+    }
+
+    public void entregar() {
+        this.setStatus(StatusPedido.ENTREGUE);
+        this.setDataConfirmacao(OffsetDateTime.now());
+    }
+
+    private void setStatus(StatusPedido novoStatus) {
+
+        StatusPedido statusAtual = this.getStatus();
+
+        if (!statusAtual.podeAlterarPara(novoStatus)) {
+            throw new NegocioException(String.format("Status do pedido %s não pode ser alterado de %s para %s",
+                    this.getId(), statusAtual.getDescricao(), novoStatus.getDescricao()));
+        }
+
+        this.status = novoStatus;
+    }
+
+    @PrePersist
+    private void gerarCodigo(){
+        setCodigo(UUID.randomUUID().toString());
+    }
+
 }

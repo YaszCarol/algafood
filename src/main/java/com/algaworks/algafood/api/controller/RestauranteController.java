@@ -5,6 +5,7 @@ import com.algaworks.algafood.api.disassembler.RestaurateInputDisassembler;
 import com.algaworks.algafood.api.model.CozinhaModel;
 import com.algaworks.algafood.api.model.RestauranteModel;
 import com.algaworks.algafood.api.model.input.RestauranteInput;
+import com.algaworks.algafood.api.model.input.view.RestauranteView;
 import com.algaworks.algafood.core.validation.ValidacaoException;
 import com.algaworks.algafood.domain.exception.CidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.CozinhaNaoEncontradaException;
@@ -13,6 +14,7 @@ import com.algaworks.algafood.domain.exception.RestauranteNaoEncontradaException
 import com.algaworks.algafood.domain.model.Cozinha;
 import com.algaworks.algafood.domain.model.Restaurante;
 import com.algaworks.algafood.domain.service.RestauranteService;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -47,8 +49,25 @@ public class RestauranteController {
     @Autowired
     private RestaurateInputDisassembler restauranteDisassembler;
 
-    @GetMapping
+//    @JsonView(RestauranteView.Resumo.class)
+//    @GetMapping
+//    public List<RestauranteModel> listar() {
+//        List<Restaurante> restaurantes = restauranteService.listar();
+//
+//        return restauranteAssembler.toCollectionModel(restaurantes);
+//    }
+
+    @JsonView(RestauranteView.Resumo.class)
+    @GetMapping(params = "projecao=resumo")
     public List<RestauranteModel> listar() {
+        List<Restaurante> restaurantes = restauranteService.listar();
+
+        return restauranteAssembler.toCollectionModel(restaurantes);
+    }
+
+    @JsonView(RestauranteView.ResumoNome.class)
+    @GetMapping(params = "projecao=apenas-nome")
+    public List<RestauranteModel> listarResumido() {
         List<Restaurante> restaurantes = restauranteService.listar();
 
         return restauranteAssembler.toCollectionModel(restaurantes);

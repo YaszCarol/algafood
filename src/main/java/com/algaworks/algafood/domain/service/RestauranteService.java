@@ -1,7 +1,6 @@
 package com.algaworks.algafood.domain.service;
 
 import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
-import com.algaworks.algafood.domain.exception.RestauranteComFormaPagamentoNaoEncontrado;
 import com.algaworks.algafood.domain.exception.RestauranteNaoEncontradaException;
 import com.algaworks.algafood.domain.model.*;
 import com.algaworks.algafood.domain.repository.RestauranteRepository;
@@ -153,13 +152,7 @@ public class RestauranteService {
         restauranteIds.forEach(this::ativar);
     }
 
-    public void containsFormaPagamento(Long restauranteId, Long formapagamentoId){
-
-        Restaurante restaurante = this.buscar(restauranteId);
-        FormaPagamento formaPagamento = formaPagamentoService.buscar(formapagamentoId);
-
-        if(!restaurante.containsFormaPagamento(formaPagamento)){
-            throw new RestauranteComFormaPagamentoNaoEncontrado(formaPagamento.getDescricao());
-        }
+    public boolean containsFormaPagamento(Long restauranteId, Long formaPagamentoId) {
+        return restauranteRepository.existsByIdAndFormasPagamentoId(restauranteId, formaPagamentoId);
     }
 }

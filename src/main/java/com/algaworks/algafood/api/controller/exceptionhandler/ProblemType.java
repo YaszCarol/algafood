@@ -9,7 +9,7 @@ public enum ProblemType {
 
     RECURSO_NAO_ENCONTRADO("/recurso-nao-encontrado", "Recurso não encontrado"),
 
-    REGRA_DE_NEGOCIO("/regra-nao-atendida", "Regra de negócio nao atendida"),
+    ERRO_NEGOCIO("/erro-negocio", "Violação de regra de negócio"),
 
     PARAMETRO_INVALIDO("/parametro-url-invalido", "Parâmetro de URL inválido"),
 

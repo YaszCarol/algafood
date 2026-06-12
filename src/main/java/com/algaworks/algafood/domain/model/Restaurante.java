@@ -115,4 +115,8 @@ public class Restaurante {
     public boolean containsFormaPagamento(FormaPagamento formaPagamento) {
         return this.formasPagamento.contains(formaPagamento);
     }
+
+    public boolean containsProduto(Produto produto) {
+        return this.getProdutos().contains(produto);
+    }
 }

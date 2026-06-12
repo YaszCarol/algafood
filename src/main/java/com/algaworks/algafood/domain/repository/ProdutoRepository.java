@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ProdutoRepository extends CustomJpaRepository<Produto, Long> {
 
-    @Query()
     public Optional<Produto> findByIdAndRestauranteId(Long produtoId, Long restauranteid);
 }
