@@ -6,15 +6,18 @@ import com.algaworks.algafood.api.disassembler.PedidoDisassembler;
 import com.algaworks.algafood.api.model.PedidoModel;
 import com.algaworks.algafood.api.model.PedidoResumoModel;
 import com.algaworks.algafood.api.model.input.PedidoInput;
+import com.algaworks.algafood.core.data.PageableTranslator;
 import com.algaworks.algafood.domain.model.Pedido;
 import com.algaworks.algafood.domain.repository.filter.PedidoFilter;
 import com.algaworks.algafood.domain.service.PedidoService;
-import com.algaworks.algafood.domain.service.RestauranteService;
 import com.algaworks.algafood.infrastructure.respository.spec.PedidoSpecs;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("pedidos")
@@ -22,17 +25,20 @@ import java.util.List;
 public class PedidoController {
 
     private final PedidoService pedidoService;
-    private final RestauranteService restauranteService;
     private final PedidoAssembler pedidoAssembler;
     private final PedidoDisassembler pedidoDisassembler;
     private final PedidoResumoModelAssembler pedidoResumoModelAssembler;
 
 
     @GetMapping
-    public List<PedidoResumoModel> listar(PedidoFilter filtro) {
-        List<Pedido> pedidos = pedidoService.listar(PedidoSpecs.usandoFiltro(filtro));
+    public Page<PedidoResumoModel> listar(PedidoFilter filtro, Pageable pageable) {
 
-        return pedidoResumoModelAssembler.toCollectionModel(pedidos);
+        // necessario apenas em casos especificos
+         pageable = traduzirPageable(pageable);
+        Page<Pedido> pedidosPage = pedidoService.listar(PedidoSpecs.usandoFiltro(filtro), pageable);
+
+        // para cada Pedido de pedidosPage.getContent aplica a funcao de converter para model
+        return pedidosPage.map(pedidoResumoModelAssembler::toModel);
     }
 //
 //    @GetMapping
@@ -92,4 +98,11 @@ public class PedidoController {
         pedidoService.entregar(codigoId);
     }
 
+    private Pageable traduzirPageable(Pageable pageable) {
+        var mapeamento = Map.of(
+                "nomeCliente", "cliente.nome"
+        );
+
+        return PageableTranslator.translate(pageable, mapeamento);
+    }
 }
