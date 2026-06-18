@@ -1,16 +1,14 @@
 package com.algaworks.algafood.api.controller;
 
-import java.util.List;
-
 import com.algaworks.algafood.api.assembler.CozinhaModelAssembler;
 import com.algaworks.algafood.api.disassembler.CozinhaInputDisassembler;
 import com.algaworks.algafood.api.model.CozinhaModel;
 import com.algaworks.algafood.api.model.input.CozinhaInput;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,10 +36,11 @@ public class CozinhaController {
 
 
     @GetMapping
-    public List<CozinhaModel> listar() {
-        List<Cozinha> cozinhas = cozinhaService.listar();
+    public Page<CozinhaModel> listar(Pageable pageable) {
+        Page<Cozinha> cozinhasPage = cozinhaService.listar(pageable);
 
-        return cozinhaAssembler.toCollectionModel(cozinhas);
+        // para cada Cozinha de cozinhasPage.getContent aplica a funcao de converter para model
+        return cozinhasPage.map(cozinhaAssembler::toModel);
     }
 
     @GetMapping("/{cozinhaId}")
