@@ -1,26 +1,27 @@
 package com.algaworks.algafood.domain.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.algaworks.algafood.domain.exception.NegocioException;
+import com.algaworks.algafood.domain.model.event.PedidoCanceladoEvent;
+import com.algaworks.algafood.domain.model.event.PedidoConfirmadoEvent;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.algaworks.algafood.domain.Enum.StatusPedido;
 
-import jakarta.annotation.Generated;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
 @Entity
 @Data
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Pedido {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+public class Pedido extends AbstractAggregateRoot<Pedido> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,11 +74,15 @@ public class Pedido {
     public void confirmar() {
         this.setStatus(StatusPedido.CONFIRMADO);
         this.setDataConfirmacao(OffsetDateTime.now());
+
+        registerEvent(new PedidoConfirmadoEvent(this));
     }
 
     public void cancelar() {
         this.setStatus(StatusPedido.CANCELADO);
         this.setDataCancelamento(OffsetDateTime.now());
+
+        registerEvent(new PedidoCanceladoEvent(this));
     }
 
     public void entregar() {
@@ -98,7 +103,7 @@ public class Pedido {
     }
 
     @PrePersist
-    private void gerarCodigo(){
+    private void gerarCodigo() {
         setCodigo(UUID.randomUUID().toString());
     }
 
