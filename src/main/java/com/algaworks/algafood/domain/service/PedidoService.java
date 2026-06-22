@@ -89,20 +89,24 @@ public class PedidoService {
     @Transactional
     public void confirmar(String codigoId) {
         Pedido pedido = this.buscar(codigoId);
+
         pedido.confirmar();
+
+        this.salvar(pedido);
+
     }
 
     @Transactional
     public void cancelar(String codigoId) {
         Pedido pedido = this.buscar(codigoId);
-
         pedido.cancelar();
+
+        this.salvar(pedido);
     }
 
     @Transactional
     public void entregar(String codigoId) {
         Pedido pedido = this.buscar(codigoId);
-
         pedido.entregar();
     }
 }

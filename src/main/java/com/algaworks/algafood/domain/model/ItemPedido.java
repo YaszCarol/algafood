@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class ItemPedido {
+public class  ItemPedido {
 
     @Id
     @EqualsAndHashCode.Include
