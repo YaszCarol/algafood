@@ -17,7 +17,7 @@ public class NotificacaoClientePedidoCanceladoListener {
     @TransactionalEventListener
     //@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     //@EventListener
-    public void aoConfirmarPedido(PedidoCanceladoEvent event) {
+    public void aoCancelarPedido(PedidoCanceladoEvent event) {
 
         Pedido pedido = event.getPedido();
 
