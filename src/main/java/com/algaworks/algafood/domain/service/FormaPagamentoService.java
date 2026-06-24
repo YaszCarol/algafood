@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -53,5 +53,9 @@ public class FormaPagamentoService {
                     String.format(MSG_FORMAPAGAMENTO_EM_USO, formapagamentoId));
 
         }
+    }
+
+    public OffsetDateTime getDataAtualizacaoById(Long formapagamentoId){
+        return pagamentoRepository.getDataAtualizacaoById(formapagamentoId);
     }
 }

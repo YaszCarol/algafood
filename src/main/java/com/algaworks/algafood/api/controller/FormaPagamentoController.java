@@ -8,10 +8,15 @@ import com.algaworks.algafood.domain.model.FormaPagamento;
 import com.algaworks.algafood.domain.service.FormaPagamentoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.filter.ShallowEtagHeaderFilter;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/pagamentos")
@@ -27,14 +32,34 @@ public class FormaPagamentoController {
     private PagamentoDisassembler pagamentoDisassembler;
 
     @GetMapping
-    public List<FormaPagamentoModel> listar() {
+    public ResponseEntity<List<FormaPagamentoModel>> listar() {
         List<FormaPagamento> pagamentos = formaPagamentoService.listar();
 
-        return formaPagamentoAssembler.toCollectionModel(pagamentos);
+        var formasPagamento = formaPagamentoAssembler.toCollectionModel(pagamentos);
+
+        return ResponseEntity.ok().
+                cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS)).
+                body(formasPagamento);
     }
 
     @GetMapping("/{formapagamentoId}")
-    public FormaPagamentoModel buscar(@PathVariable Long formapagamentoId) {
+    public FormaPagamentoModel buscar(@PathVariable Long formapagamentoId, ServletWebRequest request) {
+
+        // Deep-Etag
+        ShallowEtagHeaderFilter.disableContentCaching(request.getRequest());
+
+        String eTag = "0";
+
+        OffsetDateTime dataUltimaAtualizacao = formaPagamentoService.getDataAtualizacaoById(formapagamentoId);
+
+        if (dataUltimaAtualizacao != null) {
+            eTag = String.valueOf(dataUltimaAtualizacao.toEpochSecond());
+        }
+
+        if (request.checkNotModified(eTag)) {
+            return null;
+        }
+
         FormaPagamento pagamento = formaPagamentoService.buscar(formapagamentoId);
 
         return formaPagamentoAssembler.toModel(pagamento);
