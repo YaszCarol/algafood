@@ -1,40 +1,29 @@
 package com.algaworks.algafood.api.controller;
 
+import com.algaworks.algafood.api.assembler.RestauranteApenasNomeModelAssembler;
+import com.algaworks.algafood.api.assembler.RestauranteBasicoModelAssembler;
 import com.algaworks.algafood.api.assembler.RestauranteModelAssembler;
 import com.algaworks.algafood.api.disassembler.RestaurateInputDisassembler;
-import com.algaworks.algafood.api.model.CozinhaModel;
+import com.algaworks.algafood.api.model.RestauranteApenasNomeModel;
+import com.algaworks.algafood.api.model.RestauranteBasicoModel;
 import com.algaworks.algafood.api.model.RestauranteModel;
 import com.algaworks.algafood.api.model.input.RestauranteInput;
 import com.algaworks.algafood.api.model.input.view.RestauranteView;
-import com.algaworks.algafood.core.validation.ValidacaoException;
 import com.algaworks.algafood.domain.exception.CidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.CozinhaNaoEncontradaException;
 import com.algaworks.algafood.domain.exception.NegocioException;
 import com.algaworks.algafood.domain.exception.RestauranteNaoEncontradaException;
-import com.algaworks.algafood.domain.model.Cozinha;
 import com.algaworks.algafood.domain.model.Restaurante;
 import com.algaworks.algafood.domain.service.RestauranteService;
 import com.fasterxml.jackson.annotation.JsonView;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.SmartValidator;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.exc.PropertyBindingException;
-import tools.jackson.databind.json.JsonMapper;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RequestMapping("/restaurantes")
 @RestController
@@ -47,29 +36,35 @@ public class RestauranteController {
     private RestauranteModelAssembler restauranteAssembler;
 
     @Autowired
+    private RestauranteBasicoModelAssembler restauranteBasicoModelAssembler;
+
+    @Autowired
+    private RestauranteApenasNomeModelAssembler restauranteApenasNomeModelAssembler;
+
+    @Autowired
     private RestaurateInputDisassembler restauranteDisassembler;
 
     @GetMapping
-    public List<RestauranteModel> listar() {
+    public CollectionModel<RestauranteBasicoModel> listar() {
         List<Restaurante> restaurantes = restauranteService.listar();
 
-        return restauranteAssembler.toCollectionModel(restaurantes);
+        return restauranteBasicoModelAssembler.toCollectionModel(restaurantes);
     }
 
 //    @JsonView(RestauranteView.Resumo.class)
 //    @GetMapping(params = "projecao=resumo")
-//    public List<RestauranteModel> listar() {
+//    public CollectionModel<Restau> listarResumo() {
 //        List<Restaurante> restaurantes = restauranteService.listar();
 //
-//        return restauranteAssembler.toCollectionModel(restaurantes);
+//        return restauranteApenasNomeModelAssembler.toCollectionModel(restaurantes);
 //    }
 
-    @JsonView(RestauranteView.ResumoNome.class)
+  //  @JsonView(RestauranteView.ResumoNome.class)
     @GetMapping(params = "projecao=apenas-nome")
-    public List<RestauranteModel> listarResumido() {
+    public CollectionModel <RestauranteApenasNomeModel> listarApenasNome() {
         List<Restaurante> restaurantes = restauranteService.listar();
 
-        return restauranteAssembler.toCollectionModel(restaurantes);
+        return restauranteApenasNomeModelAssembler.toCollectionModel(restaurantes);
     }
 
     @GetMapping("/{restauranteId}")
@@ -118,31 +113,35 @@ public class RestauranteController {
 
 
     @PutMapping("/{restauranteId}/ativo")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void ativar(@PathVariable Long restauranteId){
+    public ResponseEntity<Void> ativar(@PathVariable Long restauranteId){
 
         restauranteService.ativar(restauranteId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{restauranteId}/ativo")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void inativar(@PathVariable Long restauranteId){
+    public ResponseEntity<Void> inativar(@PathVariable Long restauranteId){
 
         restauranteService.inativar(restauranteId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{restauranteId}/fechamento")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void fechar(@PathVariable Long restauranteId){
+    public ResponseEntity<Void> fechar(@PathVariable Long restauranteId){
 
         restauranteService.fechar(restauranteId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{restauranteId}/aberto")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void abrir(@PathVariable Long restauranteId){
+    public ResponseEntity<Void> abrir(@PathVariable Long restauranteId){
 
         restauranteService.abrir(restauranteId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/ativacoes")

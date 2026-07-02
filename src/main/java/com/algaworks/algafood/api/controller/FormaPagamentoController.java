@@ -1,6 +1,6 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.FormaPagamentoAssembler;
+import com.algaworks.algafood.api.assembler.FormaPagamentoModelAssembler;
 import com.algaworks.algafood.api.disassembler.PagamentoDisassembler;
 import com.algaworks.algafood.api.model.FormaPagamentoModel;
 import com.algaworks.algafood.api.model.input.PagamentoInput;
@@ -8,39 +8,48 @@ import com.algaworks.algafood.domain.model.FormaPagamento;
 import com.algaworks.algafood.domain.service.FormaPagamentoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.filter.ShallowEtagHeaderFilter;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@RequestMapping("/pagamentos")
+@RequestMapping("/formas-pagamento")
 public class FormaPagamentoController {
 
     @Autowired
     private FormaPagamentoService formaPagamentoService;
 
     @Autowired
-    private FormaPagamentoAssembler formaPagamentoAssembler;
+    private FormaPagamentoModelAssembler formaPagamentoModelAssembler;
 
     @Autowired
     private PagamentoDisassembler pagamentoDisassembler;
 
     @GetMapping
-    public ResponseEntity<List<FormaPagamentoModel>> listar() {
+    public CollectionModel<FormaPagamentoModel> listar() {
         List<FormaPagamento> pagamentos = formaPagamentoService.listar();
 
-        var formasPagamento = formaPagamentoAssembler.toCollectionModel(pagamentos);
-
-        return ResponseEntity.ok().
-                cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS)).
-                body(formasPagamento);
+        return formaPagamentoModelAssembler.toCollectionModel(pagamentos);
     }
+
+//    @GetMapping
+//    public ResponseEntity<List<FormaPagamentoModel>> listar() {
+//        List<FormaPagamento> pagamentos = formaPagamentoService.listar();
+//
+//        var formasPagamento = formaPagamentoModelAssembler.toCollectionModel(pagamentos);
+//
+//        return ResponseEntity.ok().
+//                cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS)).
+//                body(formasPagamento);
+//    }
 
     @GetMapping("/{formapagamentoId}")
     public FormaPagamentoModel buscar(@PathVariable Long formapagamentoId, ServletWebRequest request) {
@@ -62,7 +71,7 @@ public class FormaPagamentoController {
 
         FormaPagamento pagamento = formaPagamentoService.buscar(formapagamentoId);
 
-        return formaPagamentoAssembler.toModel(pagamento);
+        return formaPagamentoModelAssembler.toModel(pagamento);
     }
 
     @PostMapping
@@ -73,7 +82,7 @@ public class FormaPagamentoController {
 
         formaPagamentoService.salvar(pagamento);
 
-        return formaPagamentoAssembler.toModel(pagamento);
+        return formaPagamentoModelAssembler.toModel(pagamento);
     }
 
     @PutMapping("/{formapagamentoId}")
@@ -85,7 +94,7 @@ public class FormaPagamentoController {
 
         formaPagamentoService.salvar(formaPagamento);
 
-        return formaPagamentoAssembler.toModel(formaPagamento);
+        return formaPagamentoModelAssembler.toModel(formaPagamento);
     }
 
     @DeleteMapping("/{formapagamentoId}")

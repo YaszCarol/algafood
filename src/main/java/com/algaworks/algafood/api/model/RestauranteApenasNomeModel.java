@@ -6,9 +6,8 @@ import org.springframework.hateoas.RepresentationModel;
 
 @Getter
 @Setter
-public class CidadeResumoModel extends RepresentationModel<CidadeResumoModel> {
+public class RestauranteApenasNomeModel extends RepresentationModel<RestauranteApenasNomeModel> {
 
     private Long id;
     private String nome;
-    private String estado;
 }

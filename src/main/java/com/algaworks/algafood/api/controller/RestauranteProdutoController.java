@@ -1,15 +1,18 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.ProdutoAssembler;
+import com.algaworks.algafood.api.AlgaLinks;
+import com.algaworks.algafood.api.assembler.ProdutoModelAssembler;
 import com.algaworks.algafood.api.disassembler.ProdutoDisassembler;
 import com.algaworks.algafood.api.model.ProdutoModel;
 import com.algaworks.algafood.api.model.input.ProdutoInput;
 import com.algaworks.algafood.domain.model.Produto;
 import com.algaworks.algafood.domain.model.Restaurante;
+import com.algaworks.algafood.domain.repository.ProdutoRepository;
 import com.algaworks.algafood.domain.service.ProdutoService;
 import com.algaworks.algafood.domain.service.RestauranteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +26,7 @@ public class RestauranteProdutoController {
     private RestauranteService restauranteService;
 
     @Autowired
-    private ProdutoAssembler produtoAssembler;
+    private ProdutoModelAssembler produtoModelAssembler;
 
     @Autowired
     private ProdutoService produtoService;
@@ -31,21 +34,44 @@ public class RestauranteProdutoController {
     @Autowired
     private ProdutoDisassembler produtoDisassembler;
 
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private AlgaLinks algaLinks;
+
     @GetMapping
-    public List<ProdutoModel> listar(@PathVariable Long restauranteId) {
+    public CollectionModel<ProdutoModel> listar(@PathVariable Long restauranteId,
+                                                @RequestParam(required = false, defaultValue = "false") Boolean incluirInativos) {
         Restaurante restaurante = restauranteService.buscar(restauranteId);
 
-        List<Produto> produtos = restaurante.getProdutos();
+        List<Produto> todosProdutos = null;
 
-        return produtoAssembler.toCollectionModel(produtos);
+        if (incluirInativos) {
+            todosProdutos = produtoRepository.findTodosByRestaurante(restaurante);
+        } else {
+            todosProdutos = produtoRepository.findAtivosByRestaurante(restaurante);
+        }
+
+        return produtoModelAssembler.toCollectionModel(todosProdutos)
+                .add(algaLinks.linkToProdutos(restauranteId));
     }
+
+//    @GetMapping
+//    public List<ProdutoModel> listar(@PathVariable Long restauranteId) {
+//        Restaurante restaurante = restauranteService.buscar(restauranteId);
+//
+//        List<Produto> produtos = restaurante.getProdutos();
+//
+//        return produtoModelAssembler.toCollectionModel(produtos);
+//    }
 
     @GetMapping("/{produtoId}")
     public ProdutoModel buscar(@PathVariable Long restauranteId, @PathVariable Long produtoId) {
 
         Produto produto = produtoService.buscar(produtoId, restauranteId);
 
-        return produtoAssembler.toModel(produto);
+        return produtoModelAssembler.toModel(produto);
     }
 
     @PostMapping
@@ -60,7 +86,7 @@ public class RestauranteProdutoController {
 
         produtoService.salvar(produto);
 
-        return produtoAssembler.toModel(produto);
+        return produtoModelAssembler.toModel(produto);
     }
 
     @PutMapping("/{produtoId}")
@@ -74,7 +100,7 @@ public class RestauranteProdutoController {
 
         produtoService.salvar(produto);
 
-        return produtoAssembler.toModel(produto);
+        return produtoModelAssembler.toModel(produto);
 
     }
 }
