@@ -1,17 +1,16 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.UsuarioAssembler;
+import com.algaworks.algafood.api.assembler.UsuarioModelAssembler;
 import com.algaworks.algafood.api.disassembler.UsuarioDisassembler;
 import com.algaworks.algafood.api.model.UsuarioModel;
 import com.algaworks.algafood.api.model.input.UsuarioAtualizarInput;
 import com.algaworks.algafood.api.model.input.UsuarioAtualizarSenhaInput;
 import com.algaworks.algafood.api.model.input.UsuarioInput;
-import com.algaworks.algafood.domain.exception.NegocioException;
 import com.algaworks.algafood.domain.model.Usuario;
 import com.algaworks.algafood.domain.service.UsuarioService;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,13 +24,13 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @Autowired
-    private UsuarioAssembler usuarioAssembler;
+    private UsuarioModelAssembler usuarioAssembler;
 
     @Autowired
     private UsuarioDisassembler usuarioDisassembler;
 
     @GetMapping
-    public List<UsuarioModel> listar() {
+    public CollectionModel<UsuarioModel> listar() {
         List<Usuario> usuarios = usuarioService.listar();
 
         return usuarioAssembler.toCollectionModel(usuarios);

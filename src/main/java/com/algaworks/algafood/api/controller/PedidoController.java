@@ -1,11 +1,12 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.PedidoAssembler;
+import com.algaworks.algafood.api.assembler.PedidoModelAssembler;
 import com.algaworks.algafood.api.assembler.PedidoResumoModelAssembler;
 import com.algaworks.algafood.api.disassembler.PedidoDisassembler;
 import com.algaworks.algafood.api.model.PedidoModel;
 import com.algaworks.algafood.api.model.PedidoResumoModel;
 import com.algaworks.algafood.api.model.input.PedidoInput;
+import com.algaworks.algafood.core.PageWrapper;
 import com.algaworks.algafood.core.data.PageableTranslator;
 import com.algaworks.algafood.domain.model.Pedido;
 import com.algaworks.algafood.domain.filter.PedidoFilter;
@@ -15,6 +16,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -25,21 +29,36 @@ import java.util.Map;
 public class PedidoController {
 
     private final PedidoService pedidoService;
-    private final PedidoAssembler pedidoAssembler;
+    private final PedidoModelAssembler pedidoAssembler;
     private final PedidoDisassembler pedidoDisassembler;
     private final PedidoResumoModelAssembler pedidoResumoModelAssembler;
+    private final PagedResourcesAssembler pagedResourcesAssembler;
 
 
     @GetMapping
-    public Page<PedidoResumoModel> listar(PedidoFilter filtro, Pageable pageable) {
+    public PagedModel<PedidoResumoModel> listar(PedidoFilter filtro, Pageable pageable) {
 
         // necessario apenas em casos especificos
-         pageable = traduzirPageable(pageable);
+        pageable = traduzirPageable(pageable);
+
         Page<Pedido> pedidosPage = pedidoService.listar(PedidoSpecs.usandoFiltro(filtro), pageable);
 
-        // para cada Pedido de pedidosPage.getContent aplica a funcao de converter para model
-        return pedidosPage.map(pedidoResumoModelAssembler::toModel);
+        pedidosPage = new PageWrapper<>(pedidosPage, pageable);
+
+        return pagedResourcesAssembler.toModel(pedidosPage, pedidoResumoModelAssembler);
+
     }
+
+//    @GetMapping
+//    public Page<PedidoResumoModel> listar(PedidoFilter filtro, Pageable pageable) {
+//
+//        // necessario apenas em casos especificos
+//         pageable = traduzirPageable(pageable);
+//        Page<Pedido> pedidosPage = pedidoService.listar(PedidoSpecs.usandoFiltro(filtro), pageable);
+//
+//        // para cada Pedido de pedidosPage.getContent aplica a funcao de converter para model
+//        return pedidosPage.map(pedidoResumoModelAssembler::toModel);
+//    }
 //
 //    @GetMapping
 //    public List<PedidoResumoModel> listar() {
@@ -84,23 +103,34 @@ public class PedidoController {
     }
 
     @PutMapping("/{codigoId}/confirmacao")
-    public void confirmar(@PathVariable String codigoId) {
+    public ResponseEntity<Void> confirmar(@PathVariable String codigoId) {
         pedidoService.confirmar(codigoId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{codigoId}/cancelamento")
-    public void cancelar(@PathVariable String codigoId) {
+    public ResponseEntity<Void> cancelar(@PathVariable String codigoId) {
         pedidoService.cancelar(codigoId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{codigoId}/entregue")
-    public void entregar(@PathVariable String codigoId) {
+    public ResponseEntity<Void> entregar(@PathVariable String codigoId) {
         pedidoService.entregar(codigoId);
+        return ResponseEntity.noContent().build();
     }
 
     private Pageable traduzirPageable(Pageable pageable) {
         var mapeamento = Map.of(
-                "nomeCliente", "cliente.nome"
+                "codigo", "codigo",
+                "subtotal", "subtotal",
+                "taxaFrete", "taxaFrete",
+                "valorTotal", "valorTotal",
+                "dataCriacao", "dataCriacao",
+                "nomerestaurante", "restaurante.nome",
+                "restaurante.id", "restaurante.id",
+                "cliente.id", "cliente.id",
+                "cliente.nome", "cliente.nome"
         );
 
         return PageableTranslator.translate(pageable, mapeamento);

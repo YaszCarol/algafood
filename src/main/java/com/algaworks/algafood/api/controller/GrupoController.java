@@ -1,6 +1,6 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.GrupoAssembler;
+import com.algaworks.algafood.api.assembler.GrupoModelAssembler;
 import com.algaworks.algafood.api.disassembler.GrupoDisassembler;
 import com.algaworks.algafood.api.model.GrupoModel;
 import com.algaworks.algafood.api.model.input.GrupoInput;
@@ -8,6 +8,7 @@ import com.algaworks.algafood.domain.model.Grupo;
 import com.algaworks.algafood.domain.service.GrupoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,16 +22,16 @@ public class GrupoController {
     private GrupoService grupoService;
 
     @Autowired
-    private GrupoAssembler grupoAssembler;
+    private GrupoModelAssembler grupoModelAssembler;
 
     @Autowired
     private GrupoDisassembler grupoDisassembler;
 
     @GetMapping
-    public List<GrupoModel> listar() {
+    public CollectionModel<GrupoModel> listar() {
 
         List<Grupo> grupos = grupoService.listar();
-        return grupoAssembler.toCollectionModel(grupos);
+        return grupoModelAssembler.toCollectionModel(grupos);
     }
 
     @GetMapping("/{grupoId}")
@@ -38,7 +39,7 @@ public class GrupoController {
 
         Grupo grupo = grupoService.buscar(grupoId);
 
-        return grupoAssembler.toModel(grupo);
+        return grupoModelAssembler.toModel(grupo);
     }
 
     @PostMapping
@@ -49,7 +50,7 @@ public class GrupoController {
 
         grupoService.salvar(grupo);
 
-        return grupoAssembler.toModel(grupo);
+        return grupoModelAssembler.toModel(grupo);
 
     }
 
@@ -62,7 +63,7 @@ public class GrupoController {
 
         grupoService.salvar(grupo);
 
-        return grupoAssembler.toModel(grupo);
+        return grupoModelAssembler.toModel(grupo);
     }
 
     @DeleteMapping("/{grupoId}")
@@ -70,6 +71,4 @@ public class GrupoController {
     public void deletar(@PathVariable Long grupoId) {
         grupoService.deletar(grupoId);
     }
-
-
 }

@@ -2,15 +2,14 @@ package com.algaworks.algafood.api.controller;
 
 import java.util.List;
 
-import com.algaworks.algafood.api.assembler.EstadoAssembler;
+import com.algaworks.algafood.api.assembler.EstadoModelAssembler;
 import com.algaworks.algafood.api.disassembler.EstadoDisassembler;
+import com.algaworks.algafood.api.model.EstadoModel;
 import com.algaworks.algafood.api.model.input.EstadoInput;
-import com.algaworks.algafood.api.model.input.EstadoModel;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
-import com.algaworks.algafood.domain.exception.EntidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.model.Estado;
 import com.algaworks.algafood.domain.service.EstadoService;
 
@@ -33,17 +30,17 @@ public class EstadoController {
 	private EstadoService estadoService;
 
 	@Autowired
-	private EstadoAssembler estadoAssembler;
+	private EstadoModelAssembler estadoAssembler;
 
 	@Autowired
 	private EstadoDisassembler estadoDisassembler;
 
 	@GetMapping
-	public List<EstadoModel> listar() {
+	public CollectionModel<EstadoModel> listar() {
 
 		List<Estado> estados = estadoService.listar();
 
-		return estadoAssembler.toCollectModel(estados);
+		return estadoAssembler.toCollectionModel(estados);
 	}
 
 	@GetMapping("/{estadoId}")

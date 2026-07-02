@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.algaworks.algafood.domain.exception.NegocioException;
-import com.algaworks.algafood.domain.model.event.PedidoCanceladoEvent;
-import com.algaworks.algafood.domain.model.event.PedidoConfirmadoEvent;
+import com.algaworks.algafood.domain.event.PedidoCanceladoEvent;
+import com.algaworks.algafood.domain.event.PedidoConfirmadoEvent;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -107,4 +107,15 @@ public class Pedido extends AbstractAggregateRoot<Pedido> {
         setCodigo(UUID.randomUUID().toString());
     }
 
+    public boolean podeSerConfirmado() {
+        return getStatus().podeAlterarPara(StatusPedido.CONFIRMADO);
+    }
+
+    public boolean podeSerEntregue() {
+        return getStatus().podeAlterarPara(StatusPedido.ENTREGUE);
+    }
+
+    public boolean podeSerCancelado() {
+        return getStatus().podeAlterarPara(StatusPedido.CANCELADO);
+    }
 }

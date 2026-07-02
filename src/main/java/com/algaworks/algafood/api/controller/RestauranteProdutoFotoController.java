@@ -1,7 +1,7 @@
 package com.algaworks.algafood.api.controller;
 
 
-import com.algaworks.algafood.api.assembler.FotoProdutoAssembler;
+import com.algaworks.algafood.api.assembler.FotoProdutoModelAssembler;
 import com.algaworks.algafood.api.model.FotoProdutoModel;
 import com.algaworks.algafood.api.model.input.ProdutoFotoInput;
 import com.algaworks.algafood.domain.exception.EntidadeNaoEncontradaException;
@@ -10,7 +10,6 @@ import com.algaworks.algafood.domain.model.Produto;
 import com.algaworks.algafood.domain.service.CatalogoFotoProdutoService;
 import com.algaworks.algafood.domain.service.FotoStorageService;
 import com.algaworks.algafood.domain.service.ProdutoService;
-import com.algaworks.algafood.infrastructure.respository.S3FotoStorageServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 @RequestMapping("/restaurantes/{restauranteId}/produtos/{produtoId}/foto")
@@ -40,7 +38,7 @@ public class RestauranteProdutoFotoController {
     private ProdutoService produtoService;
 
     @Autowired
-    private FotoProdutoAssembler fotoProdutoAssembler;
+    private FotoProdutoModelAssembler fotoProdutoModelAssembler;
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public FotoProdutoModel atualizar(@PathVariable Long restauranteId,
@@ -60,7 +58,7 @@ public class RestauranteProdutoFotoController {
 
         FotoProduto fotoSalva = catalogoFotoProdutoService.salvar(fotoProduto, file.getInputStream());
 
-        return fotoProdutoAssembler.toModel(fotoSalva);
+        return fotoProdutoModelAssembler.toModel(fotoSalva);
 
     }
 
@@ -69,7 +67,7 @@ public class RestauranteProdutoFotoController {
                                    @PathVariable Long produtoId) {
         FotoProduto fotoProduto = catalogoFotoProdutoService.buscar(restauranteId, produtoId);
 
-        return fotoProdutoAssembler.toModel(fotoProduto);
+        return fotoProdutoModelAssembler.toModel(fotoProduto);
     }
 
     @GetMapping

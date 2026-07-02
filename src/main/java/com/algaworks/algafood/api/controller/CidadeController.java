@@ -1,6 +1,7 @@
 package com.algaworks.algafood.api.controller;
 
-import com.algaworks.algafood.api.assembler.CidadeAssembler;
+import com.algaworks.algafood.api.ResourceUriHelper;
+import com.algaworks.algafood.api.assembler.CidadeModelAssembler;
 import com.algaworks.algafood.api.disassembler.CidadeInputDisassembler;
 import com.algaworks.algafood.api.model.CidadeModel;
 import com.algaworks.algafood.api.model.input.CidadeInput;
@@ -9,8 +10,8 @@ import com.algaworks.algafood.domain.exception.NegocioException;
 import com.algaworks.algafood.domain.model.Cidade;
 import com.algaworks.algafood.domain.service.CidadeService;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +25,13 @@ public class CidadeController {
     private CidadeService cidadeService;
 
     @Autowired
-    private CidadeAssembler cidadeAssembler;
+    private CidadeModelAssembler cidadeAssembler;
 
     @Autowired
     private CidadeInputDisassembler cidadeDisassembler;
 
     @GetMapping
-    public List<CidadeModel> listar() {
+    public CollectionModel<CidadeModel> listar() {
 
         List<Cidade> cidades = cidadeService.listar();
 
@@ -51,9 +52,13 @@ public class CidadeController {
         try {
             Cidade cidade = cidadeDisassembler.toDomainObject(cidadeInput);
 
-            Cidade cidadeSalva = cidadeService.salvar(cidade);
+            cidade = cidadeService.salvar(cidade);
 
-            return cidadeAssembler.toModel(cidadeSalva);
+            CidadeModel cidadeModel = cidadeAssembler.toModel(cidade);
+
+            ResourceUriHelper.addUriInResponseHeader(cidadeModel.getId());
+
+            return cidadeModel;
         } catch (EstadoNaoEncontradoException exception) {
             throw new NegocioException(exception.getMessage(), exception);
         }
